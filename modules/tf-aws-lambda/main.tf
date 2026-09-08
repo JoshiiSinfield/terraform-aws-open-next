@@ -127,10 +127,15 @@ resource "aws_lambda_permission" "function_url_permission" {
 resource "aws_lambda_permission" "function_url_invoke_permission" {
   count = var.run_at_edge == false && var.function_url.create && var.function_url.allow_any_principal ? 1 : 0
 
-  action                 = "lambda:InvokeFunction"
-  function_name          = aws_lambda_function.lambda_function.function_name
-  principal              = "*"
-  function_url_auth_type = var.function_url.authorization_type
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function.function_name
+  principal     = "*"
+  # NOTE: function_url_auth_type must NOT be set on a lambda:InvokeFunction
+  # permission. AWS only accepts function_url_auth_type on the
+  # lambda:InvokeFunctionUrl action; setting it here fails with
+  # "InvalidParameterValueException: FunctionUrlAuthType is only supported for
+  # lambda:InvokeFunctionUrl action". The InvokeFunctionUrl companion
+  # (function_url_permission) carries the auth type.
 }
 
 # Cloudwatch Logs
